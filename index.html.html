@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bedrijvenbelasting Poperinge – Rekentool (2026–2031)</title>
+  <style>
+    :root { --gap: 14px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.35; margin: 0; background:#f6f7f9; color:#111; }
+    .wrap { max-width: 860px; margin: 32px auto; padding: 0 16px; }
+    .card { background:#fff; border-radius:16px; box-shadow: 0 6px 20px rgba(0,0,0,.06); padding: 22px; }
+    h1 { margin: 0 0 10px; font-size: clamp(22px, 3.2vw, 32px); }
+    .sub { color:#555; margin-bottom: 18px; }
+    .grid { display: grid; gap: var(--gap); grid-template-columns: 1fr; }
+    @media (min-width: 760px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+    label { font-weight: 600; display: block; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #d9dbe0; background:#fbfbfc; }
+    .row { display: grid; gap: 8px; align-items: end; }
+    .muted { color:#666; font-size: 13px; }
+    .result { border: 2px dashed #d8dee9; border-radius: 14px; padding: 16px; background:#f9fafb; }
+    .money { font-size: clamp(22px, 3vw, 28px); font-weight: 800; }
+    .pill { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#eef2ff; font-size:12px; margin-left:8px; }
+    .flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn { background:#111; color:#fff; border:none; padding: 10px 14px; border-radius:12px; cursor:pointer; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .right { text-align:right; }
+    .small { font-size: 12px; color:#555; }
+    .ok { color:#0a7a2f; }
+    .warn { color:#a15a00; }
+    details { background:#f3f4f6; border-radius:12px; padding: 10px 12px; }
+    summary { cursor: pointer; font-weight: 600; margin: -10px -12px 8px; padding:10px 12px; }
+    .badge { font-size: 11px; background:#e8eefc; border:1px solid #d6e2ff; padding:2px 6px; border-radius: 8px; }
+    .kader { font-size: 13px; color:#333; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Rekentool algemene gemeentebelasting op bedrijfsvestigingen</h1>
+      <div class="sub">Poperinge – aanslagjaren 2026–2031</div>
+
+      <div class="grid grid-2">
+        <div class="row">
+          <label for="jaar">Aanslagjaar</label>
+          <select id="jaar">
+            <option>2026</option><option>2027</option><option>2028</option>
+            <option>2029</option><option>2030</option><option>2031</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="index">Index november (jaar vóór aanslagjaar)</label>
+          <input id="index" type="number" step="0.01" placeholder="bv. 132.45" />
+          <div class="muted">Neem het officiële consumptieprijsindexcijfer van november van het jaar vóór het aanslagjaar.</div>
+        </div>
+
+        <div class="row">
+          <label for="indexBase">Index november 2025 (basis)</label>
+          <input id="indexBase" type="number" step="0.01" placeholder="bv. 128.12" />
+        </div>
+
+        <div class="row">
+          <label for="oppTot">Totale oppervlakte m² (voor de exploitatie)</label>
+          <input id="oppTot" type="number" step="1" min="0" />
+        </div>
+
+        <div class="row">
+          <label for="oppGroen">Groenzone + braakliggende grond m² (uitgesloten)</label>
+          <input id="oppGroen" type="number" step="1" min="0" value="0" />
+        </div>
+
+        <div class="row">
+          <label for="isAgri">Land-/tuinbouw? (weiden & cultuurgrond uitsluiten)</label>
+          <select id="isAgri"><option value="nee">Nee</option><option>Ja</option></select>
+        </div>
+
+        <div class="row">
+          <label for="oppWeide">Weiden + cultuurgrond m² (alleen bij land-/tuinbouw)</label>
+          <input id="oppWeide" type="number" step="1" min="0" value="0" />
+        </div>
+
+        <div class="row">
+          <label for="vrijstelling">Vrijstelling van toepassing?</label>
+          <select id="vrijstelling">
+            <option value="geen">Geen</option>
+            <option>Toeristisch logies</option>
+            <option>Nachtwinkel</option>
+            <option>Taxivervoer/ceremonieel</option>
+            <option>Rechtspersoon art. 180–181 WIB 92</option>
+            <option>PAB-ondernemingsnummer</option>
+            <option>Nieuwe vestiging (jaar 1–2)</option>
+            <option>Student-zelfstandige</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex" style="margin-top:14px;">
+        <button class="btn" id="calc">Bereken</button>
+        <span class="small">Basistarieven (index 11/2025): 0–1000 m²: €0,10 · 1001–10.000 m²: €0,08 · 10.001–500.000 m²: €0,06. Minimumbedrag: €105.</span>
+      </div>
+
+      <div class="result" style="margin-top:14px;">
+        <div><span class="money" id="bedrag">€ 0,00</span> <span class="pill" id="status"></span></div>
+        <div class="kader" id="uitleg"></div>
+      </div>
+
+      <details style="margin-top:12px;">
+        <summary>Hoe wordt dit berekend?</summary>
+        <div class="kader">
+          Degressieve schijven met jaarlijkse indexatie (november-index), max. 500.000 m² belastbaar, minimum €105/vestiging. Vrijstellingen geven €0.<br/>
+          Formule: nieuw tarief = basistarief × (index_nov) / (index_nov_2025). Afronding op 2 decimalen per m²-tarief.
+        </div>
+      </details>
+
+      <div class="small" style="margin-top:10px;">
+        Deze rekentool is informatief en volgt het voorstel/ontwerp-reglement (goedkeuring voorzien 22 dec 2025) voor aanslagjaren 2026–2031. Raadpleeg het officiële reglement voor de exacte juridische bepalingen. 
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fmt = n => n.toLocaleString('nl-BE', { style:'currency', currency:'EUR' });
+    const afrond2 = v => Math.round(v * 100) / 100;
+
+    function bereken() {
+      const jaar = document.getElementById('jaar').value;
+      const index = parseFloat(document.getElementById('index').value);
+      const indexBase = parseFloat(document.getElementById('indexBase').value);
+      const oppTot = parseFloat(document.getElementById('oppTot').value || 0);
+      const oppGroen = parseFloat(document.getElementById('oppGroen').value || 0);
+      const isAgri = document.getElementById('isAgri').value === 'Ja';
+      const oppWeide = isAgri ? parseFloat(document.getElementById('oppWeide').value || 0) : 0;
+      const vrij = document.getElementById('vrijstelling').value;
+
+      const statusEl = document.getElementById('status');
+      const uitlegEl = document.getElementById('uitleg');
+      const bedragEl = document.getElementById('bedrag');
+
+      // Vrijstelling?
+      if (vrij !== 'geen') {
+        bedragEl.textContent = fmt(0);
+        statusEl.textContent = 'Vrijstelling toegepast';
+        statusEl.className = 'pill ok';
+        uitlegEl.textContent = 'De gekozen vrijstelling resulteert in €0 voor aanslagjaar ' + jaar + '.';
+        return;
+      }
+
+      // Inputcheck
+      if (!isFinite(index) || !isFinite(indexBase) || index<=0 || indexBase<=0) {
+        bedragEl.textContent = '–';
+        statusEl.textContent = 'Vul de indexcijfers in';
+        statusEl.className = 'pill warn';
+        uitlegEl.textContent = 'Voor de indexatie heb je het indexcijfer van november van het jaar voorafgaand aan het aanslagjaar en het indexcijfer van november 2025 nodig.';
+        return;
+      }
+
+      // Belastbare m² bepalen
+      let belastbare = Math.max(0, oppTot - oppGroen - oppWeide);
+      belastbare = Math.min(belastbare, 500000);
+
+      // Tarieven met indexatie en afronding op 2 decimalen
+      const factor = index / indexBase;
+      const t1 = afrond2(0.10 * factor);
+      const t2 = afrond2(0.08 * factor);
+      const t3 = afrond2(0.06 * factor);
+
+      // Schijven
+      const s1 = Math.min(belastbare, 1000);
+      const s2 = Math.min(Math.max(belastbare - 1000, 0), 9000);
+      const s3 = Math.max(belastbare - 10000, 0);
+
+      let bedrag = s1*t1 + s2*t2 + s3*t3;
+      if (belastbare > 0) bedrag = Math.max(bedrag, 105); // minimum
+
+      bedragEl.textContent = fmt(bedrag);
+      statusEl.textContent = belastbare === 0 ? 'Geen belastbare oppervlakte' : 'Indicatieve berekening';
+      statusEl.className = 'pill';
+      uitlegEl.innerHTML =
+        `Belastbare m²: <b>${belastbare.toLocaleString('nl-BE')}</b> (na uitsluitingen).
+         Tarieven (€/m²) na index: 0–1000: <b>${t1.toFixed(2)}</b>, 1001–10.000: <b>${t2.toFixed(2)}</b>, 10.001–500.000: <b>${t3.toFixed(2)}</b>.
+         Minimum toegepast: <b>€ 105</b> ${belastbare>0 && (s1*t1 + s2*t2 + s3*t3) < 105 ? '(ja)' : '(nee)'}.
+         <div class="small">Opmerking: berekening per vestiging. Stopzetting/wijziging m² in de loop van het jaar wijzigt het bedrag niet.</div>`;
+    }
+
+    document.getElementById('calc').addEventListener('click', bereken);
+  </script>
+</body>
+</html>
+
