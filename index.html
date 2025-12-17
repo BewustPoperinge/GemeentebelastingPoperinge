@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rekentool – Gemeentebelasting op bedrijven (Poperinge)</title>
+  <meta name="description" content="Rekentool voor de nieuwe gemeentebelasting op bedrijfsvestigingen in Poperinge, met vergelijking t.o.v. 2020–2025 (geïndexeerd naar 2025).">
+  <style>
+    :root{
+      --gap:14px;
+      --accent:#0b5aa5;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --card:#ffffff;
+      --bg:#f6f8fb;
+      --ring:rgba(11,90,165,.25);
+      --signal:#b91c1c;
+      --green:#7CA242;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      line-height:1.5; margin:0; background:var(--bg); color:var(--ink);
+    }
+    .topbar{ background:var(--accent); color:#fff; }
+    .topbar .wrap{ padding:16px 16px; display:flex; align-items:center; gap:18px; }
+    .brand h1{ margin:0; font-size:clamp(20px,3vw,28px); }
+    .brand .byline{ color:#dbe7f3; font-size:13px; margin-top:4px; }
+
+    .wrap{ max-width:960px; margin:0 auto; padding:0 16px 28px; }
+    .card{
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:0 10px 30px rgba(12,34,51,.08);
+      padding:22px;
+      border:1px solid rgba(11,90,165,.15);
+      margin-top:18px;
+    }
+    .intro{ color:#334155; }
+    .grid{ display:grid; gap:var(--gap); grid-template-columns:1fr; }
+    label{ font-weight:600; display:block; margin-bottom:6px; }
+
+    input[type="text"]{
+      width:100%; padding:12px 12px; border-radius:12px;
+      border:1px solid #d7dee6; background:#fbfdff; font-size:16px;
+      outline:none;
+    }
+    input[type="text"]:focus{ border-color:var(--accent); box-shadow:0 0 0 4px var(--ring); }
+
+    .muted{ color:var(--muted); font-size:13px; }
+
+    .btn{
+      background:var(--accent); color:#fff; border:none; padding:12px 16px;
+      border-radius:12px; cursor:pointer; font-weight:700;
+      box-shadow:0 6px 16px rgba(12,34,51,.12);
+    }
+    .btn:hover{ filter:brightness(0.98); }
+    .btn.secondary{ background:var(--green); }
+    .btn.secondary:hover{ filter:brightness(0.98); }
+
+    .btn-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+
+    .result{
+      border:1px solid #e4eaf1; border-radius:14px; padding:16px; background:#f9fbfe; margin-top:14px;
+    }
+    .block{ border:1px solid #e5e7eb; border-radius:14px; padding:14px; background:#ffffff; margin-top:12px; }
+
+    .money{ font-size:clamp(28px,3.4vw,36px); font-weight:800; letter-spacing:.2px; }
+    .pill{
+      display:inline-block; padding:3px 10px; border-radius:999px;
+      background:#eef2ff; font-size:12px; margin-left:8px;
+      border:1px solid #d9e1ff; color:#0c2233;
+    }
+    .small{ font-size:12px; color:#555; }
+
+    details{ background:#f3f6fa; border-radius:12px; padding:10px 12px; }
+    summary{ cursor:pointer; font-weight:600; margin:-10px -12px 8px; padding:10px 12px; }
+    .kader{ font-size:14px; color:#334155; }
+
+    .diff{ font-weight:800; }
+    .diff.up{ color:var(--signal); }
+    .diff.down{ color:#111827; }
+
+    footer{ margin-top:18px; color:#4b5563; font-size:13px; }
+
+    /* Checkbox layout */
+    .checks{
+      display:grid; grid-template-columns:20px 1fr;
+      row-gap:10px; column-gap:10px; align-items:center;
+    }
+    .checks input[type="checkbox"]{ width:18px; height:18px; margin:0; accent-color:var(--accent); }
+    .checks label{ font-weight:400; margin:0; font-size:14px; color:#111827; }
+    .disabled{ opacity:.55; }
+
+    /* Info tooltip */
+    .info-wrap{ display:inline-block; position:relative; margin-left:8px; }
+    .info-btn{
+      width:18px; height:18px; border-radius:50%;
+      border:1px solid #cbd5e1; background:#f8fafc;
+      color:#475569; font-size:12px;
+      display:inline-flex; align-items:center; justify-content:center;
+      cursor:pointer; font-weight:700; line-height:1;
+    }
+    .info-pop{
+      display:none;
+      position:absolute; top:26px; left:0;
+      min-width:260px;
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      padding:10px 12px;
+      box-shadow:0 10px 25px rgba(0,0,0,.08);
+      font-size:13px;
+      color:#334155;
+      z-index:50;
+    }
+
+    /* Share UI */
+    .share-row{ margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; }
+.share-card-host{ position:fixed; left:-10000px; top:0; width:0; height:0; overflow:hidden; }
+
+    .share-card{
+      width:1080px; height:1080px;
+      background:#ffffff;
+      border:10px solid rgba(11,90,165,.15);
+      border-radius:48px;
+      padding:56px 64px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:#0f172a;
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      row-gap:28px;
+    }
+    .share-footer{ font-size:24px; color:#64748b; text-align:left; }
+    .share-subtitle{ font-size:56px; color:var(--accent); margin:0 0 14px; font-weight:800; }
+    .share-title{ font-size:34px; color:var(--green); margin:0 0 10px; }
+    .share-amount{ font-size:120px; font-weight:800; letter-spacing:.2px; margin:8px 0 6px; }
+    .share-meta{ font-size:30px; color:#334155; margin:0; }
+    .share-diff{ font-size:54px; font-weight:800; margin:18px 0 0; }
+    .share-diff.up{ color:var(--signal); }     /* rood bij meerkost */
+    .share-diff.down{ color:#111827; }         /* zwart bij winst */
+    .share-hr{ height:2px; background:rgba(15,23,42,.08); margin:22px 0; }
+
+    @media print{
+      .btn-row, details, .topbar, .share-row, .format-picker{ display:none !important; }
+      .card{ box-shadow:none; border:none; }
+      .wrap{ margin:0; }
+    }
+  
+    .share-badge {
+      display: inline-block;
+      font-size: 22px;
+      font-weight: 700;
+      color: #334155;
+      border: 2px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 6px 16px;
+      margin-bottom: 18px;
+    }
+
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand">
+        <h1>Gemeentebelasting op bedrijven – rekentool</h1>
+        <div class="byline">Deze rekentool werd ontwikkeld door Bewust Poperinge. We willen transparantie brengen rond de nieuwe gemeentebelasting voor bedrijven die de meerderheid — CD&amp;V en Samen Vooruit — wil invoeren.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="intro">
+        Vul de totale oppervlakte in die effectief wordt gebruikt of kan worden gebruikt voor de economische activiteit, inclusief gebouwen, parkeerplaatsen, laad- of loszones en andere functioneel gebruikte terreinen. Groenzones zonder functioneel gebruik, braakliggende grond en landbouw- of weidegrond worden niet meegerekend.
+      </div>
+
+      <!-- Invoer -->
+      <div class="grid" style="margin-top:10px;">
+        <div>
+          <label for="opp">Belastbare oppervlakte (m²)</label>
+          <input id="opp" type="text" inputmode="numeric" placeholder="bv. 1.200" />
+          <div class="muted">Maximaal 500.000 m² wordt belast.</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="calc">Bereken</button>
+      </div>
+
+      <div class="result">
+        <div class="block" id="blokNieuw" style="display:none;">
+          <div><span class="money" id="bedrag">€ 0,00</span> <span class="pill" id="status"></span></div>
+          <div class="kader" id="uitleg"></div>
+          <div class="small" style="margin-top:8px;">
+            Let op: de tarieven worden jaarlijks geïndexeerd volgens de consumptieprijsindex (basis november 2025). Deze tool rekent met de basistarieven zonder indexatie.
+          </div>
+        </div>
+
+        <!-- Vergelijking met vroeger (witte kaart) -->
+        <div class="block" id="blokVergelijk" style="display:none;">
+          <div style="font-weight:700; margin-bottom:8px;">
+            Vergelijking met vroegere belasting
+            <span class="info-wrap">
+              <span class="info-btn" id="infoBtn">i</span>
+              <div class="info-pop" id="infoPop">
+                Wie zijn economische activiteit op het adres van zijn hoofdverblijfplaats uitoefende,
+                was vrijgesteld van de bedrijfsbelasting en betaalde enkel de gezinsbelasting.
+              </div>
+            </span>
+          </div>
+
+          <div class="checks" style="margin-bottom:4px;">
+            <input type="checkbox" id="aanHuis"><label for="aanHuis">Economische activiteit op hetzelfde adres als hoofdverblijfplaats</label>
+            <input type="checkbox" id="alleenstaand"><label for="alleenstaand">Ik ben alleenstaande</label>
+          </div>
+          <div class="kader" id="vergelijk" style="margin-top:10px; font-size:16px;"></div>
+          <div class="small" style="margin-top:6px; color:#6b7280;">(Bedragen oude regeling geïndexeerd naar prijspeil 2025: bedrijfsbelasting €122; gezinsbelasting €91; alleenstaanden €49.)</div>
+        </div>
+
+        <div class="share-row" id="shareRow" style="display:none;">
+          <button class="btn secondary" id="shareResultBtn">Deel dit resultaat</button>
+        </div>
+</div>
+
+        <!-- Verborgen share-card (enkel vierkant) -->
+        <div class="share-card-host" aria-hidden="true">
+          <div class="share-card" id="shareCardSquare">
+            <div class="share-header">
+              <span class="share-badge">Voorstel CD&amp;V – Samen Vooruit</span>
+              <p class="share-subtitle">Nieuwe gemeentebelasting op bedrijven in Poperinge</p>
+              <p class="share-title">Resultaat simulatie 2026</p>
+            </div>
+            <div class="share-body">
+              <p class="share-amount" id="sc_amount_sq">€ 0,00</p>
+              <p class="share-meta" id="sc_meta_sq">Belastbare m²: 0</p>
+              <div class="share-hr"></div>
+              <p class="share-meta" id="sc_old_sq">Oude situatie (2025): € 0,00</p>
+              <p class="share-diff up" id="sc_diff_sq">Verschil: +€ 0,00 (+0%)</p>
+            </div>
+            <div class="share-footer">Simulatie door Bewust, gebaseerd op het ontwerpreglement 2026–2031.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarieven -->
+      <details class="block" style="margin-top:12px;">
+        <summary>Tariefschijven</summary>
+        <div class="kader" style="margin-top:8px;">
+          <p>De belasting wordt progressief berekend op basis van de totale belastbare oppervlakte:</p>
+          <ul>
+            <li>Eerste 1.000 m²: €0,10 per m²</li>
+            <li>Van 1.001 tot 10.000 m²: €0,08 per m²</li>
+            <li>Boven 10.000 m² (tot maximaal 500.000 m²): €0,06 per m²</li>
+          </ul>
+          <p>Er geldt altijd een minimum van €105 per vestiging per jaar. De tarieven worden jaarlijks geïndexeerd (prijspeil november 2025).</p>
+          <p class="small">Deze rekentool werkt met de basistarieven, zonder toekomstige indexatie.</p>
+        </div>
+      </details>
+
+      <!-- Vrijstellingen -->
+      <details class="block" style="margin-top:10px;">
+        <summary>Vrijstellingen</summary>
+        <div class="kader" style="margin-top:8px;">
+          <p>Enkel de onderstaande categorieën zijn vrijgesteld:</p>
+          <ul>
+            <li>Uitbaters van toeristische logies, die onder een aparte gemeentelijke belasting vallen</li>
+            <li>Uitbaters van nachtwinkels, die onder een aparte gemeentelijke belasting vallen</li>
+            <li>Exploitanten van taxi- en ceremonieel vervoer, die onder een aparte gemeentelijke retributie vallen</li>
+            <li>Overheden, onderwijsinstellingen, zorginstellingen en bepaalde vzw’s van openbaar nut</li>
+            <li>Personen met een ondernemingsnummer in het kader van een persoonsvolgend budget (met attest)</li>
+            <li>Nieuwe bedrijven tijdens de eerste twee aanslagjaren</li>
+            <li>Student-zelfstandigen, voor hun activiteit als student-zelfstandige</li>
+          </ul>
+        </div>
+      </details>
+
+      
+      <!-- Welke oppervlakte is belastbaar -->
+      <details class="block" style="margin-top:10px;">
+        <summary>Welke oppervlakte is belastbaar?</summary>
+        <div class="kader" style="margin-top:8px;">
+          <p>Letterlijk uit het ontwerpreglement:</p>
+
+          <p>Oppervlakte:<br>
+          elk (gedeelte van een) onroerend goed, elke lokaliteit of ruimte onder gelijk welke vorm,
+          die individueel of collectief wordt gebruikt of kan worden gebruikt voor de exploitatie.</p>
+
+          <p>Gebruik:<br>
+          elke vorm van gebruik dat nuttig is voor de exploitatie van het bedrijf, met inbegrip van
+          parking, laad-, los- of stortplaats en opslag- of overslagruimte.</p>
+
+          <p>Als belastbare oppervlakte komt in aanmerking:<br>
+          de totale oppervlakte, zowel bebouwde als onbebouwde, die voor de uitoefening van de
+          beroepsactiviteit of voor de bedrijfsuitbating wordt gebruikt, kan gebruikt worden, of
+          hiervoor noodzakelijk is, alsmede de oppervlakte van de aanliggende terreinen met
+          inbegrip van alle oppervlakte die een functionele band heeft met de uitoefening van de
+          beroepsactiviteit of met de bedrijfsuitbating.</p>
+
+          <p>Komt niet in aanmerking en moet dienvolgens niet worden aangegeven:</p>
+          <ul>
+            <li>voor alle bedrijven: de oppervlakte van groenzones en/of braakliggende grond</li>
+            <li>voor land- en tuinbouwbedrijven en plantenkwekerijen: de weilanden en cultuurgronden</li>
+          </ul>
+        </div>
+      </details>
+
+
+      <footer class="small" style="margin-top:10px;">
+        Informatieve tool. Gebaseerd op het ontwerpreglement voor 2026–2031.
+      </footer>
+    </div>
+  </div>
+
+  <!-- Dependency: html-to-image -->
+  <script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+  <script>
+    function fmt(n){ return n.toLocaleString('nl-BE', { style:'currency', currency:'EUR' }); }
+
+    function sanitizeNumberInput(value){
+      if (typeof value !== 'string') return 0;
+      const v = value.trim().replace(/\./g,'').replace(',', '.'); // remove thousand dots, swap comma
+      const num = parseFloat(v);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function parseAmount(text){
+      const num = parseFloat(String(text).replace(/[^0-9,.-]/g,'').replace(/\./g,'').replace(',', '.'));
+      return isNaN(num) ? null : num;
+    }
+
+    function bereken(){
+      const oppInput = document.getElementById('opp').value || '0';
+      const opp = Math.max(0, sanitizeNumberInput(oppInput));
+
+      const blokNieuw = document.getElementById('blokNieuw');
+      const blokVergelijk = document.getElementById('blokVergelijk');
+      const statusEl = document.getElementById('status');
+      const uitlegEl = document.getElementById('uitleg');
+      const bedragEl = document.getElementById('bedrag');
+
+      // Progressieve berekening per schijf, cap 500.000 m², minimum €105 altijd
+      const belastbare = Math.min(opp, 500000);
+      const s1 = Math.min(belastbare, 1000);
+      const s2 = Math.min(Math.max(belastbare - 1000, 0), 9000);
+      const s3 = Math.max(belastbare - 10000, 0);
+
+      const t1 = 0.10, t2 = 0.08, t3 = 0.06;
+      const som = s1*t1 + s2*t2 + s3*t3;
+      const nieuw = Math.max(som, 105);
+
+      bedragEl.textContent = fmt(nieuw);
+      statusEl.textContent = 'Indicatieve berekening';
+      statusEl.className = 'pill';
+      uitlegEl.innerHTML = 'Belastbare m²: <b>' + belastbare.toLocaleString('nl-BE') + '</b>';
+
+      blokNieuw.style.display = 'block';
+      blokVergelijk.style.display = 'block';
+
+      document.getElementById('shareRow').style.display = 'flex';
+      vergelijk();
+    }
+
+    function vergelijk(){
+      const aanHuis = document.getElementById('aanHuis').checked;
+      const alleenstaandBox = document.getElementById('alleenstaand');
+      const bedragEl = document.getElementById('bedrag');
+      const vergelijkEl = document.getElementById('vergelijk');
+
+      // Alleenstaande is enkel logisch bij 'aan huis'
+      if (!aanHuis){
+        alleenstaandBox.checked = false;
+        alleenstaandBox.disabled = true;
+        alleenstaandBox.parentElement.classList.add('disabled');
+      } else {
+        alleenstaandBox.disabled = false;
+        alleenstaandBox.parentElement.classList.remove('disabled');
+      }
+
+      const alleenstaand = alleenstaandBox.checked;
+
+      const nieuw = parseAmount(bedragEl.textContent);
+      if (nieuw === null){
+        vergelijkEl.textContent = 'Voer eerst een oppervlakte in en klik op Bereken.';
+        return;
+      }
+
+      // Oude regeling – bedragen geïndexeerd naar prijspeil 2025
+      let oud, label;
+      if (aanHuis){
+        oud = alleenstaand ? 49 : 91;
+        label = alleenstaand ? '(alleenstaande – prijspeil 2025)' : '(gezin – prijspeil 2025)';
+      } else {
+        oud = 122;
+        label = '(bedrijfsbelasting – prijspeil 2025)';
+      }
+
+      const diff = nieuw - oud;
+      const isUp = diff > 0;
+      const teken = diff >= 0 ? '+' : '–';
+      const pct = oud > 0 ? ((Math.abs(diff) / oud) * 100) : null;
+
+      let html = '';
+      html += 'Oude situatie (2025): <b>' + fmt(oud) + '</b> ' + label + '<br/>';
+      html += 'Verschil: <span class="diff ' + (isUp ? 'up' : 'down') + '">' + teken + fmt(Math.abs(diff)) + '</span>';
+      if (pct !== null){
+        html += ' (<span class="diff ' + (isUp ? 'up' : 'down') + '">' + teken + Math.abs(pct).toFixed(0) + '%</span>)';
+      }
+      html += ' per jaar.';
+      vergelijkEl.innerHTML = html;
+    }
+
+    // Tooltip info
+    const infoBtn = document.getElementById('infoBtn');
+    const infoPop = document.getElementById('infoPop');
+    if (infoBtn && infoPop){
+      infoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        infoPop.style.display = (infoPop.style.display === 'block') ? 'none' : 'block';
+      });
+      document.addEventListener('click', () => { infoPop.style.display = 'none'; });
+    }
+
+    // Share (enkel vierkant)
+    const shareResultBtn = document.getElementById('shareResultBtn');
+    function setShareCardContent(){
+      const bedragText = document.getElementById('bedrag')?.textContent || '';
+      const belastbaarText = document.getElementById('uitleg')?.textContent || '';
+
+      const nieuw = parseAmount(bedragText);
+      const aanHuis = document.getElementById('aanHuis')?.checked;
+      const alleenstaand = document.getElementById('alleenstaand')?.checked;
+
+      let oud = 122;
+      if (aanHuis) oud = alleenstaand ? 49 : 91;
+
+      const diff = (nieuw === null) ? 0 : (nieuw - oud);
+      const isUp = diff > 0;
+      const teken = diff >= 0 ? '+' : '–';
+      const pct = oud > 0 ? ((Math.abs(diff) / oud) * 100) : 0;
+
+      const oldLine = 'Oude situatie (2025): ' + fmt(oud);
+      const diffLine = 'Verschil: ' + teken + fmt(Math.abs(diff)) + ' (' + teken + Math.abs(pct).toFixed(0) + '%)';
+
+      document.getElementById('sc_amount_sq').textContent = bedragText || fmt(0);
+      document.getElementById('sc_meta_sq').textContent = belastbaarText.replace(/\s+/g,' ').trim();
+      document.getElementById('sc_old_sq').textContent = oldLine;
+
+      const d1 = document.getElementById('sc_diff_sq');
+      d1.textContent = diffLine;
+      d1.className = 'share-diff ' + (isUp ? 'up' : 'down'); // rood bij meerkost, zwart bij winst
+    }
+
+    async function exportSquare(){
+      setShareCardContent();
+      const el = document.getElementById('shareCardSquare');
+      const dataUrl = await htmlToImage.toPng(el, { cacheBust:true, pixelRatio:2 });
+
+      // Try native share with file (mobile)
+      try{
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], 'resultaat-vierkant.png', { type:'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files:[file] })){
+          await navigator.share({ files:[file], title:'Resultaat simulatie' });
+          return;
+        }
+      } catch(e){}
+
+      // Fallback: download
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'resultaat-vierkant.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    if (shareResultBtn){
+      shareResultBtn.addEventListener('click', exportSquare);
+    }
+
+// Events
+    document.getElementById('calc').addEventListener('click', bereken);
+    document.getElementById('aanHuis').addEventListener('change', vergelijk);
+    document.getElementById('alleenstaand').addEventListener('change', vergelijk);
+  </script>
+</body>
+</html>
